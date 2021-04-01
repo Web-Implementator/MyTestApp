@@ -1,7 +1,7 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { useState, useEffect } from 'react';
 
 import {
+  TouchableOpacity,
   SafeAreaView,
   StatusBar,
   FlatList,
@@ -16,99 +16,59 @@ import {
 } from 'react-native-tab-view';
 
 import styles from '../../shared/Styles.js';
-import styles_component from './Styles.js';
+import styles_screen from './Styles.js';
 
 import { fetchGet } from '../../services/http.service';
 
-export default class Tab extends React.Component {
+const Tab = (props) => {
 
-  state = {
-    tabIndex: 0,
-    tabRoutes: [
-      {
-        key: 'quote_1',
-        title: 'Котировка 1',
-      },
-      {
-        key: 'quote_2',
-        title: 'Котировка 2',
-      },
-      {
-        key: 'quote_3',
-        title: 'Котировка 3',
-      }
-    ],
+  const [index, setIndex] = useState(0);
+  const [tabRoute, setRoute] = useState([
+    {
+      index: 302, key: 'BTC_TRU'
+    },
+    {
+      index: 267, key: 'BTC_WBTC'
+    },
+    {
+      index: 26, key: 'BTC_ZEC'
+    },
+    {
+      index: 153, key: 'BTC_XFIL'
+    },
+  ]);
+  const [state, setState] = useState({
+    data: {},
     dataStatus: 0,
-    dataError: '',
-    data: {
-      quote_1: [],
-      quote_2: [],
-      quote_3: [],
-    }
-  }
+    dataError: false
+  });
 
-  interval = null;
+  const { navigation, isLoadingApp } = props;
 
-  componentDidMount() {
-    this.loadQuotes();
-  }
-
-  shouldComponentUpdate(nextProps, nextState) {
-    const { timerStatus } = nextProps;
-
-    if (timerStatus === true) this.timerStart();
-    else this.timerStop();
-
-    return true;
-  }
-
-  render() {
-    const { navigation, isLoadingApp } = this.props;
-    const { tabIndex, tabRoutes } = this.state;
-    if (isLoadingApp) return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar translucent backgroundColor={'#f5f8fe'} barStyle="dark-content" />
-        <TabView
-          navigationState={{ index: tabIndex, routes: tabRoutes }}
-          renderTabBar={this.renderTabBar}
-          renderScene={this.renderScene}
-          onIndexChange={(tabIndex) => {
-            this.setState({ tabIndex });
-          }}
-          initialLayout={Dimensions.get('window').width}
-          windowSize={1}
-        />
-      </SafeAreaView>
-    );
-
-    return null;
-  }
-
-  renderTabBar = (props) => (
+  const _renderTabBar = props => (
     <TabBar
       {...props}
       indicatorStyle={{ backgroundColor: '#000' }}
       scrollEnabled
       pressOpacity={0.8}
       renderLabel={({ route }) => (
-        <Text>{route.title}</Text>
+        <Text style={styles.fs_14}>{route.key}</Text>
       )}
       tabStyle={{
-        paddingLeft: 15,
-        paddingRight: 15,
-        width: 'auto',
+        alignItems: 'center',
+        width: 120,
       }}
     />
   );
 
-  renderScene = ({ route }) => {
-    const { data, dataStatus, dataError } = this.state;
+  const _renderScene = ({ route }) => {
+    const { data, dataStatus, dataError } = state;
 
     if (dataStatus === 0) return (
       <Text style={[styles.fs_16, styles.mt20, styles.tc]}>Загрузка ...</Text>
     );
 
-    if (dataStatus === 2) return (
+    if (dataError !== false) return (
       <>
         <Text style={[styles.fs_16, styles.mt20, styles.tc]}>Ошибка при загрузке</Text>
         <Text style={[styles.fs_14, styles.mt20, styles.tc]}>{dataError}</Text>
@@ -119,79 +79,105 @@ export default class Tab extends React.Component {
       <FlatList
         testID={`quotes-list-${route.title}`}
         style={[styles.plr, styles.pt20]}
-        data={data[route.key]}
+        data={data[route.index]}
         keyExtractor={(item, index) =>
           `${index}-${item.last}-${item.highestBid}-${item.percentChange}`
         }
+        extraData={state.data}
         ItemSeparatorComponent={() => (
           <View style={[styles.mt10]}/>
         )}
         ListFooterComponent={(
           <View style={[styles.mb40]}/>
         )}
-        renderItem={({ item, index }) => (
-          <View style={[styles.fdr, styles.w100]}>
-            <View style={[styles.w20, styles.pr10]}>
-              <Text style={styles.fs_10}>{item.name}</Text>
+        renderItem={({ item, index }) => {
+          return (
+            <View style={styles.fdr}>
+              {index == 0 && (
+                <View style={{ flex: 1, alignSelf: 'stretch' }}>
+                  <View style={{ flex: 1, alignSelf: 'stretch' }}>
+                    <Text style={styles.fs_14}>name</Text>
+                  </View>
+                  <View style={{ flex: 1, alignSelf: 'stretch' }}>
+                    <Text style={styles.fs_14}>baseVolume</Text>
+                  </View>
+                  <View style={{ flex: 1, alignSelf: 'stretch' }}>
+                    <Text style={styles.fs_14}>last</Text>
+                  </View>
+                  <View style={{ flex: 1, alignSelf: 'stretch' }}>
+                    <Text style={styles.fs_14}>quoteVolume</Text>
+                  </View>
+                  <View style={{ flex: 1, alignSelf: 'stretch' }}>
+                    <Text style={styles.fs_14}>lowestAsk</Text>
+                  </View>
+                </View>
+              )}
+              <View style={{ flex: 1, alignSelf: 'stretch' }}>
+                <View style={{ flex: 1, alignSelf: 'stretch' }}>
+                  <Text style={styles.fs_14}>{item.name}</Text>
+                </View>
+                <View style={{ flex: 1, alignSelf: 'stretch' }}>
+                  <Text style={styles.fs_14}>{item.baseVolume}</Text>
+                </View>
+                <View style={{ flex: 1, alignSelf: 'stretch' }}>
+                  <Text style={styles.fs_14}>{item.last}</Text>
+                </View>
+                <View style={{ flex: 1, alignSelf: 'stretch' }}>
+                  <Text style={styles.fs_14}>{item.quoteVolume}</Text>
+                </View>
+                <View style={{ flex: 1, alignSelf: 'stretch' }}>
+                  <Text style={styles.fs_14}>{item.lowestAsk}</Text>
+                </View>
+              </View>
             </View>
-            <View style={[styles.w30, styles.pr10]}>
-              <Text style={[styles.fs_8, styles.tc]}>{item.last}</Text>
-            </View>
-            <View style={[styles.w30, styles.pr10]}>
-              <Text style={[styles.fs_8, styles.tc]}>{item.highestBid}</Text>
-            </View>
-            <View style={[styles.w30, styles.pr10]}>
-              <Text style={[styles.fs_8, styles.tc]}>{item.percentChange}</Text>
-            </View>
-          </View>
-        )}
+          )
+        }}
       />
     );
   };
 
-  loadQuotes = (type = null) => {
-    if (this.interval === null && type !== null) return false;
+  useEffect(() => {
+    const timerID = setInterval(() => {
+      setState({ ...state, loading: true });
+      fetchGet('https://poloniex.com/public', { command: 'returnTicker' })
+        .then(result => {
+          return Object.keys(result).map((value, index) => {
+            result[value].name = value;
+            return Object.values([result[value]])
+          });
+        })
+       .then(newData => {
+         setState({ data: newData, dataError: false, loading: false })
+       })
+       .catch(function(error) {
+          setState({ data: {}, dataError: error, loading: false })
+       })
+    }, 25000)
 
-    fetchGet('https://poloniex.com/public', { command: 'returnTicker' })
-      .then((result) => {
-        const { data } = this.state;
-        let d = data;
-        let i = 0;
+    return () => clearInterval(timerID);
+  });
 
-        for (key in result) {
-          if (i > 30) break;
-          let m = result[key];
-          m.name = key;
-
-          d['quote_1'].push(m);
-          d['quote_2'].push(m);
-          d['quote_3'].push(m);
-
-          i++;
-        }
-        this.setState({ data: d, dataStatus: 1 });
-      })
-      .catch((error) => {
-        this.setState({ dataStatus: 2, dataError: error });
-        console.log(error);
-      })
-      .done();
-  }
-
-  timerStart = () => {
-    if (this.interval !== null) return false;
-    this.interval = setInterval(() => {
-      this.loadQuotes('interval')
-    }, 5000);
-  }
-
-  timerStop = () => {
-    this.interval = null;
-    clearInterval(this.interval);
-  }
+  if (isLoadingApp) return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar translucent backgroundColor={'#f5f8fe'} barStyle="dark-content" />
+      {setRoute.length === 0
+        ?
+        <Text style={styles.fs_14}>
+          Загрузка ...
+        </Text>
+        :
+        <TabView
+          navigationState={{ index, routes: tabRoute }}
+          renderTabBar={_renderTabBar}
+          renderScene={_renderScene}
+          onIndexChange={(index) => setIndex(index)}
+          initialLayout={Dimensions.get('window').width}
+          windowSize={1}
+        />
+      }
+    </SafeAreaView>
+  );
+  else return null;
 }
 
-Tab.propTypes = {
-  isLoadingApp: PropTypes.bool,
-  timerStatus: PropTypes.bool,
-};
+export default Tab;

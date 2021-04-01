@@ -7,7 +7,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, TransitionSpecs, CardStyleInterpolators } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-import Navigator from '../screens/Navigator/';
+import Home from '../screens/Home/';
 import Tab from '../screens/Tab/';
 
 import { setTimer } from '../reducer/application/actions';
@@ -28,8 +28,8 @@ function BottomTabNavigator(props) {
             <Text>🏠</Text>
           ),
         }}
-        name="Info"
-        component={Navigator}
+        name="Home"
+        component={Home}
       />
       <BottomTab.Screen
         options={{
@@ -45,7 +45,7 @@ function BottomTabNavigator(props) {
   );
 }
 
-export default function AppRoute(props) {
+export default AppRoute = (props) => {
   return (
     <NavigationContainer
       onStateChange={(state) => {

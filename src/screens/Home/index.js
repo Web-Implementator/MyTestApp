@@ -1,7 +1,7 @@
 import { connect } from 'react-redux';
 
-import Navigator from './Navigator';
+import Home from './Home';
 
 export default connect(state => ({
   isLoadingApp: state.application.isLoadingApp,
-}))(Navigator);
+}))(Home);
